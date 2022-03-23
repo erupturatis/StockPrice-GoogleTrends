@@ -1,4 +1,4 @@
-import webscrapping.fetching as fetching
+import webscrapping.google_trends as google_trends
 
 def calculate_correlation()->int:
     pass
