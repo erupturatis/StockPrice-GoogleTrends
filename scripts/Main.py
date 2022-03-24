@@ -1,4 +1,4 @@
-import webscrapping.google_trends as google_trends
+from webscrapping.google_trends import GoogleTrendsRequest
 
 def calculate_correlation()->int:
     pass
@@ -6,7 +6,8 @@ def calculate_correlation()->int:
 
 def main():
     # does correlation for fixed variables
-    pass
+    trends_requester = GoogleTrendsRequest()
+    trends_requester.test_request()
 
 if __name__ == "__main__":
     main()
