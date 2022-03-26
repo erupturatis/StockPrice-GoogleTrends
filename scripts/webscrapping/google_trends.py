@@ -19,32 +19,28 @@ class GoogleTrendsRequest(object):
     def test_request(self):
         s = requests.Session()
         payload = dict()
-        
-        items = [
-            {
-               "keyword":"ukraine",
-                "geo":"",
-                "time":"today+3-m" 
-            }
-        ]
-        req = {
-            'comparisonItem':items,
-            'category':0,
-            'property':''
-        }
-
+      
         payload = {
             'hl':'en-US',
-            'tz':-120,
-            'req': req
+            'tz':'-120',
+            'req':{"comparisonItem":[{"keyword":"urkaine","geo":"","time":"now 7-d"}],"category":0,"property":""} ,
+
         }
-        element = open("textfile.txt","w")
-        element.write(json.dumps(payload))
-        element.close
-        url = 'https://trends.google.com/trends/api/explore/pickers/geo'
-        get_request = s.get(url = url, params= payload)
-        print("ceva orice")
-        #print(get_request.text)
+        payload["req"] = json.dumps(payload["req"])
+        element = open("textfile.txt","w",encoding="utf-8")
+        
+
+        url = 'https://trends.google.com/trends/api/explore'
+        url2 = 'https://trends.google.com/trends/api/explore'
+        get_request = s.get(url = url2, params= payload)
+        print(get_request.text)
+        element.write("new")
+        element.write(get_request.text)
+        element.close()
 
 
         return
+
+
+trends_requester = GoogleTrendsRequest()
+trends_requester.test_request()
