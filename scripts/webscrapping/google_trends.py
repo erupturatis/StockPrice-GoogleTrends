@@ -1,3 +1,4 @@
+from cgitb import text
 import json
 from sqlite3 import paramstyle
 from urllib import request
@@ -47,20 +48,32 @@ class GoogleTrendsRequest(object):
 
 
     def get_trend(self, days = 90) -> list:
-        pass
+        payload = {
+            'hl':'en-US',
+            'tz':'-180',
+            'req':{'comparisonItem':[{f'{"3"}':'ukraine','geo':'','time':'today 3-m'}],'category':0,'property':''},
+            'token':f'{self.token}'
+        }
     
+    def write(self,text:str='',file:str='textfile') -> None:
+        text_file = open(f'{file}.txt','w')
+        text_file.write(text)
+        text_file.close()
+
 
     def get_tokens(self, keyword = 'ukraine') -> None:
         # get the tokes needed to create the request for trend over time
         payload = {
             'hl':'en-US',
             'tz':'-180',
-            'req':{'comparisonItem':[{f'{keyword}':'ukraine','geo':'','time':'today 3-m'}],'category':0,'property':''},
+            'req':{'comparisonItem':[{'keyword':f'{keyword}','geo':'','time':'today 3-m'}],'category':0,'property':''},
         }
         payload['req'] = json.dumps(payload['req'])
-
         get_req = self.get_request(self.STANDARD_URL, payload = payload)
-        print(get_req.text['widgets'])
+        response = get_req.text[5:]
+        self.token = json.loads(response)['widgets'][0]['token']
+        self.write(text=self.token)
+      
 
 
     def verify_initialization(self):
@@ -74,12 +87,11 @@ class GoogleTrendsRequest(object):
 
     @verification_needed
     def get_trend_flow(self, keyword = 'ukraine', days = 90) -> None:
+
         if not hasattr(self, 'headers'):
             self.get_cookie()
-
         self.get_tokens(keyword=keyword)
-
-        response = self.get_trend(days=days)
+        #response = self.get_trend(days=days)
             
         
 
@@ -113,6 +125,7 @@ class GoogleTrendsRequest(object):
     
    
 
+
+
 trends_requester = GoogleTrendsRequest()
-#trends_requester.test2 = trends_requester.decorator(trends_requester.test2)
-trends_requester.test2()
+trends_requester.get_trend_flow()
