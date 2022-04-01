@@ -12,6 +12,8 @@ class GoogleTrendsRequest(object):
     '''
     STANDARD_URL = "https://trends.google.com/trends/api/explore"
     GEO_URL = "https://trends.google.com/trends/api/explore/pickers/geo"
+    TREND_URL = "https://trends.google.com/trends/api/widgetdata/multiline"
+
     HL = "en-US"
     TZ = -120
 
@@ -47,13 +49,23 @@ class GoogleTrendsRequest(object):
         return get_req
 
 
-    def get_trend(self, days = 90) -> list:
+    def get_trend(self, keyword:str = '' ) -> list:
+        #builds the payload
         payload = {
             'hl':'en-US',
             'tz':'-180',
-            'req':{'comparisonItem':[{f'{"3"}':'ukraine','geo':'','time':'today 3-m'}],'category':0,'property':''},
+            'req':{"time":f'{self.time}',"resolution":"DAY","locale":"en-US","comparisonItem":[{"geo":{},"complexKeywordsRestriction":{"keyword":[{"type":"BROAD","value":f"{keyword}"}]}}],"requestOptions":{"property":"","backend":"IZG","category":0}},
             'token':f'{self.token}'
         }
+        payload['req'] = json.dumps(payload['req'])
+        response = self.get_request(self.TREND_URL, payload=payload)
+        #cuts the bad characters
+        needed_json = response.text[5:]
+        #turns json to python dict
+        needed_json = json.loads(needed_json)
+        
+        print(needed_json['default']['timelineData'])
+
     
     def write(self,text:str='',file:str='textfile') -> None:
         text_file = open(f'{file}.txt','w')
@@ -61,7 +73,7 @@ class GoogleTrendsRequest(object):
         text_file.close()
 
 
-    def get_tokens(self, keyword = 'ukraine') -> None:
+    def get_tokens(self, keyword:str = 'ukraine') -> None:
         # get the tokes needed to create the request for trend over time
         payload = {
             'hl':'en-US',
@@ -70,10 +82,12 @@ class GoogleTrendsRequest(object):
         }
         payload['req'] = json.dumps(payload['req'])
         get_req = self.get_request(self.STANDARD_URL, payload = payload)
+        # cuts the first part of the response ")]}'"
         response = get_req.text[5:]
+        # stores the token and the time
         self.token = json.loads(response)['widgets'][0]['token']
-        self.write(text=self.token)
-      
+        self.time = json.loads(response)['widgets'][0]['request']['time']
+        
 
 
     def verify_initialization(self):
@@ -91,12 +105,8 @@ class GoogleTrendsRequest(object):
         if not hasattr(self, 'headers'):
             self.get_cookie()
         self.get_tokens(keyword=keyword)
-        #response = self.get_trend(days=days)
+        response = self.get_trend(keyword=keyword)
             
-        
-
-    
-
     def test_stuff(self):
 
         self.init_requester()
@@ -105,7 +115,7 @@ class GoogleTrendsRequest(object):
         payload = {
             'hl':'en-US',
             'tz':'-180',
-            'req':{'comparisonItem':[{f'{keyword}':'ukraine','geo':'','time':'today 3-m'}],'category':0,'property':''},
+            'req':{'comparisonItem':[{'keyword':f'ukraine','geo':'','time':'today 3-m'}],'category':0,'property':''},
         }
         payload['req'] = json.dumps(payload['req'])
 
@@ -125,7 +135,7 @@ class GoogleTrendsRequest(object):
     
    
 
-
-
 trends_requester = GoogleTrendsRequest()
 trends_requester.get_trend_flow()
+
+
