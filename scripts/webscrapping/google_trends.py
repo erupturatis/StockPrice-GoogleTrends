@@ -1,10 +1,12 @@
 from cgitb import text
 import json
 from sqlite3 import paramstyle
+from time import time
 from urllib import request
 from webbrowser import get
 import requests
 import urllib3 
+import pandas as pd
 
 class GoogleTrendsRequest(object):
     '''
@@ -64,10 +66,10 @@ class GoogleTrendsRequest(object):
         #turns json to python dict
         needed_json = json.loads(needed_json)
         
-        print(needed_json['default']['timelineData'])
+        return needed_json['default']['timelineData']
 
     
-    def write(self,text:str='',file:str='textfile') -> None:
+    def write(self,text=' ',file:str='textfile') -> None:
         text_file = open(f'{file}.txt','w')
         text_file.write(text)
         text_file.close()
@@ -100,12 +102,45 @@ class GoogleTrendsRequest(object):
             
 
     @verification_needed
-    def get_trend_flow(self, keyword = 'ukraine', days = 90) -> None:
+    def get_trend_flow(self, keyword = 'ukraine', days = 90) -> list:
 
         if not hasattr(self, 'headers'):
             self.get_cookie()
         self.get_tokens(keyword=keyword)
         response = self.get_trend(keyword=keyword)
+        
+        data = list()
+        values = list()
+        times = list()
+        #gets only the wanted parameters
+        for element in response:
+            data.append({
+                'value':element['value'],
+                'time':element['formattedTime']
+            })
+            values.append(*element['value'])
+            times.append(element['formattedTime'])
+
+        df = pd.DataFrame(
+            {
+                'values': values,
+                'times':times
+            }
+        )
+        self.dataframe = df
+        self.times = times
+        self.values = values
+
+    def get_trend_data(self):
+        pass
+
+    def get_trend_csv(self):
+        pass
+
+    def save_trend_csv(self):
+        pass
+              
+        
             
     def test_stuff(self):
 
@@ -136,6 +171,7 @@ class GoogleTrendsRequest(object):
    
 
 trends_requester = GoogleTrendsRequest()
-trends_requester.get_trend_flow()
+data = trends_requester.get_trend_data()
+
 
 
