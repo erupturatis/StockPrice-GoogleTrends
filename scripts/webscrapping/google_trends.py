@@ -1,3 +1,4 @@
+from ast import arg
 from cgitb import text
 import json
 from sqlite3 import paramstyle
@@ -37,10 +38,12 @@ class GoogleTrendsRequest(object):
     def verification_needed(func):
         #decorator to call verify_initialization on all functions where is needed 
         def function_wrapper(*args):
+            
             self = args[0]
             self.verify_initialization()
-            func(self)
+            func(*args)
         return function_wrapper
+
 
 
     def get_request(self, url, **payload):
@@ -102,7 +105,7 @@ class GoogleTrendsRequest(object):
             
 
     @verification_needed
-    def get_trend_flow(self, keyword = 'ukraine', days = 90) -> list:
+    def get_trend_flow(self, keyword:str = 'ukraine', days = 90) -> list:
 
         if not hasattr(self, 'headers'):
             self.get_cookie()
@@ -130,15 +133,29 @@ class GoogleTrendsRequest(object):
         self.dataframe = df
         self.times = times
         self.values = values
+        self.data = data
 
-    def get_trend_data(self):
-        pass
 
-    def get_trend_csv(self):
-        pass
 
-    def save_trend_csv(self):
-        pass
+    def get_trend_data(self, keyword:str = 'ukraine') -> list:
+        self.get_trend_flow(keyword)
+        return self.data
+
+
+    def get_trend_csv(self, keyword:str = 'ukraine') :
+        self.get_trend_flow(keyword)
+        return self.df
+
+
+    def get_trend_values(self, keyword:str = 'ukraine') :
+        self.get_trend_flow(keyword)
+        return self.values
+
+
+    def save_trend_csv(self, keyword:str = 'ukraine') -> None:
+        self.get_trend_flow(keyword)
+        self.dataframe.to_csv(f'{keyword}.csv')
+
               
         
             
@@ -168,10 +185,10 @@ class GoogleTrendsRequest(object):
 
 
     
-   
-
-trends_requester = GoogleTrendsRequest()
-data = trends_requester.get_trend_data()
-
+if __name__ == '__main__':
+    print('google trends is main')
+    trends_requester = GoogleTrendsRequest()
+    data = trends_requester.get_trend_data(keyword="memes")
+    print(data)
 
 
