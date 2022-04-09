@@ -1,7 +1,11 @@
+from cgitb import reset
+import json
+import re
+import subprocess
 
-from sqlite3 import paramstyle
 import requests
 import pandas as pd
+
 
 class StockTrendsRequester(object):
 
@@ -35,17 +39,29 @@ class StockTrendsRequester(object):
         return function_wrapper
 
     def get_search_result(self,keyword:str) -> str:
-        payload = {
-            'search': keyword
-        }
+        '''
+        Uses the company name to get the first search result on the website 
+        This allows you to simply call the function with the company name instead
+        of the stock abbreviation
+        It uses the data for the stock fetching
+        '''
+        
+        powershell = f"powershell scripts/webscrapping/request.ps1 {keyword}"
+        response = subprocess.check_output(powershell, shell=True)
+        response = response.decode("utf-8")
+        return json.loads(response)["data"][0]["symbol"]
+       
+    def get_stock(self, symbol) -> list:
+        '''
+        makes use of another powershell file to fetch the data because 
+        python requests library doesn t work for some reason
+        '''
 
-        headers = {
-            'origin':'https://www.nasdaq.com'
-        }
-     
+    def write(self,text=' ',file:str='textfile') -> None:
+        text_file = open(f'{file}.txt','w')
+        text_file.write(text)
+        text_file.close()
 
-        req = self.session.get(self.SEARCH_URL,params=payload, headers=headers, timeout=5)
-        print(req.text)
 
     
     def get_stock_data(self, keyword:str='TSLA', days:int=90 ) -> list:
@@ -54,10 +70,20 @@ class StockTrendsRequester(object):
 
     @verification_needed
     def get_stock_flow(self, keyword:str='TSLA', days:int = 90) -> None:
-        self.get_search_result(keyword=keyword)
-        #req = self.session.get(self.URL_PART1 + keyword + self.URL_PART2)
+        #default flow for all requests
+        symbol = self.get_search_result(keyword=keyword)
+        result = self.get_stock(symbol)
+        print(req.text)
 
 
 if __name__ == '__main__':
+    '''
     st = StockTrendsRequester()
     st.get_stock_data('apple',90)
+    '''
+
+    powershell = f"powershell scripts/webscrapping/request_stock.ps1 TSLA 2021-10-09 2022-04-09"
+    response = subprocess.run(powershell, shell=True)
+    
+
+ 
