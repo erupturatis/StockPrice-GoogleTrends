@@ -1,11 +1,9 @@
-from cgitb import reset
 import json
 import re
 import subprocess
-
 import requests
 import pandas as pd
-
+from datetime import datetime, timedelta
 
 class StockTrendsRequester(object):
 
@@ -56,6 +54,13 @@ class StockTrendsRequester(object):
         makes use of another powershell file to fetch the data because 
         python requests library doesn t work for some reason
         '''
+        powershell = f"powershell scripts/webscrapping/request_stock.ps1 TSLA 2021-10-09 2022-04-09"
+        response = subprocess.check_output(powershell, shell=True)
+        # decodes and turn response into pytohn dictionary
+        response = response.decode("utf-8")
+        response = json.loads(response)
+        return response["data"]["chart"]
+
 
     def write(self,text=' ',file:str='textfile') -> None:
         text_file = open(f'{file}.txt','w')
@@ -63,7 +68,18 @@ class StockTrendsRequester(object):
         text_file.close()
 
 
-    
+    def get_day(self, days:int)->None:
+        today = datetime.today()
+        self.days_ago = str(today - timedelta(days=days))
+        self.yesterday = str(today - timedelta(days=1))
+        self.days_ago = self.days_ago[:10]
+        self.yesterday = self.yesterday[:10]
+
+        print(self.days_ago)
+        print(self.yesterday)
+
+
+
     def get_stock_data(self, keyword:str='TSLA', days:int=90 ) -> list:
         self.get_stock_flow(keyword,days)
 
@@ -73,17 +89,14 @@ class StockTrendsRequester(object):
         #default flow for all requests
         symbol = self.get_search_result(keyword=keyword)
         result = self.get_stock(symbol)
-        print(req.text)
+        print(result)
 
 
 if __name__ == '__main__':
-    '''
-    st = StockTrendsRequester()
-    st.get_stock_data('apple',90)
-    '''
 
-    powershell = f"powershell scripts/webscrapping/request_stock.ps1 TSLA 2021-10-09 2022-04-09"
-    response = subprocess.run(powershell, shell=True)
+    st = StockTrendsRequester()
+    st.get_stock_data('apple',120)
+   
     
 
  

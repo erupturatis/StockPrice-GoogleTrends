@@ -1,14 +1,14 @@
-function get2($symbol, $start) {
+function get($symbol, $start, $end) {
     Write-Output $symbol
     
     $session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
     $session.UserAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/100.0.4896.75 Safari/537.36"
-    Invoke-WebRequest -UseBasicParsing -Uri "https://api.nasdaq.com/api/quote/$symbol/chart?assetclass=stocks&fromdate=2021-10-09&todate=2022-04-09" `
+    Invoke-WebRequest -UseBasicParsing -Uri "https://api.nasdaq.com/api/quote/$symbol/chart?assetclass=stocks&fromdate=$start&todate=$end" `
     -WebSession $session `
     -Headers @{
     "authority"="api.nasdaq.com"
     "method"="GET"
-    "path"="/api/quote/$symbol/chart?assetclass=stocks&fromdate=2021-10-09&todate=2022-04-09"
+    "path"="/api/quote/$symbol/chart?assetclass=stocks&fromdate=$start&todate=$end"
     "scheme"="https"
     "accept"="application/json, text/plain, */*"
     "accept-encoding"="gzip, deflate, br"
@@ -25,9 +25,8 @@ function get2($symbol, $start) {
 }
  
 
-get2($args[0], $args[1])
-#$res = GetRequest($symbol,$start_date,$end_date)
 
-#$var = $res.Content
-#return $var
+$res = get $args[0] $args[1] $args[2]
+$var = $res.Content
+return $var
 
