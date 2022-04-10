@@ -127,7 +127,7 @@ class GoogleTrendsRequest(object):
         df = pd.DataFrame(
             {
                 'values': values,
-                'times':times
+                'times': times
             }
         )
         self.dataframe = df
@@ -135,7 +135,7 @@ class GoogleTrendsRequest(object):
         self.values = values
         self.data = data
 
-
+    
 
     def get_trend_data(self, keyword:str = 'ukraine') -> list:
         self.get_trend_flow(keyword)
@@ -156,37 +156,9 @@ class GoogleTrendsRequest(object):
         self.get_trend_flow(keyword)
         self.dataframe.to_csv(f'{keyword}.csv')
 
-              
-        
-            
-    def test_stuff(self):
-
-        self.init_requester()
-        self.get_cookie()
-
-        payload = {
-            'hl':'en-US',
-            'tz':'-180',
-            'req':{'comparisonItem':[{'keyword':f'ukraine','geo':'','time':'today 3-m'}],'category':0,'property':''},
-        }
-        payload['req'] = json.dumps(payload['req'])
-
-        element = open("textfile.txt",'w')
-
-        get_req = self.get_request(self.STANDARD_URL, payload = payload)
-        print(get_req.text['widgets'])
-
-        #print(get_request.request.headers)
-        element.write(get_req.text) 
-        element.close()
-
-
-        return
-
 
     
 if __name__ == '__main__':
-    print('google trends is main')
     trends_requester = GoogleTrendsRequest()
     data = trends_requester.get_trend_data(keyword="memes")
     print(data)
