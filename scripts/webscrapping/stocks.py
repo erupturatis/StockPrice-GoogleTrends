@@ -56,7 +56,7 @@ class StockTrendsRequester(object):
         python requests library doesn t work for some reason
         '''
         self.get_day(days=days)
-        powershell = f"powershell scripts/webscrapping/request_stock.ps1 TSLA {self.days_ago} {self.yesterday}"
+        powershell = f"powershell scripts/webscrapping/request_stock.ps1 {symbol} {self.days_ago} {self.yesterday}"
         response = subprocess.check_output(powershell, shell=True)
         # decodes and turn response into pytohn dictionary
         response = response.decode("utf-8")
@@ -91,38 +91,26 @@ class StockTrendsRequester(object):
 
     def fill_blank_days(self,result:list,days:int)->list:
         # Normalizing the data, filling the missing day spaces
+   
         final_result = result
         today = datetime.today()
         days_count = days
         
         for i in range(0,days-1):
             days_ago1 = str(today - timedelta(days=days_count-i))
-            days_ago2 = str(today - timedelta(days=days_count-1-i))
-
             days_ago1 = days_ago1[:10]
             d1 = days_ago1.split("-")
-
-            days_ago2 = days_ago2[:10]
-            d2 = days_ago2.split("-")
-
             days_ago1 = f"{d1[1]}/{d1[2]}/{d1[0]}"
-            days_ago2 = f"{d2[1]}/{d2[2]}/{d2[0]}"
             #brings the dates to the same format as result date
 
-
-            if not result[i]['times']==days_ago1:
+            
+            if not final_result[i]['times']==days_ago1:
                 final_result.insert(i,{
                     'values': result[i]['values'],
                     'times': days_ago1
                 })
 
-        yesterday_string = str(self.yesterday)[:10]
-        d1 = yesterday_string.split("-")
-        yesterday_string = f"{d1[1]}/{d1[2]}/{d1[0]}"
-        final_result.append({
-            'values': result[days-2]['values'],
-            'times': yesterday_string
-        })
+        
         return final_result
 
 
@@ -132,7 +120,7 @@ class StockTrendsRequester(object):
         #default flow for all requests
 
         symbol = self.get_search_result(keyword=keyword)
-        result = self.get_stock(symbol,days=days)
+        result = self.get_stock(symbol,days=days+1)
 
         values = list()
         times = list()
@@ -145,11 +133,12 @@ class StockTrendsRequester(object):
                 'times': element["z"]["dateTime"]
             })
 
-        simple_result = self.fill_blank_days(simple_result,days=days)
+        simple_result = self.fill_blank_days(simple_result,days=days+1)
+  
         for element in simple_result:
             values.append(element["values"])
             times.append(element["times"])
-        print(len(values))
+        
         df = pd.DataFrame(
             {
             'values': values,
@@ -160,15 +149,8 @@ class StockTrendsRequester(object):
 
 
 
-
-        
-
-
 if __name__ == '__main__':
-
+    #for testing 
     st = StockTrendsRequester()
-    st.save_stock_data('apple',120)
+    st.save_stock_data('tesla',150)
    
-    
-
- 

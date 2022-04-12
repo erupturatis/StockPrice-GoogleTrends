@@ -1,4 +1,5 @@
 from ast import arg
+from asyncore import write
 from cgitb import text
 import json
 from sqlite3 import paramstyle
@@ -62,9 +63,17 @@ class GoogleTrendsRequest(object):
             'req':{"time":f'{self.time}',"resolution":"DAY","locale":"en-US","comparisonItem":[{"geo":{},"complexKeywordsRestriction":{"keyword":[{"type":"BROAD","value":f"{keyword}"}]}}],"requestOptions":{"property":"","backend":"IZG","category":0}},
             'token':f'{self.token}'
         }
+      
+       
         payload['req'] = json.dumps(payload['req'])
         response = self.get_request(self.TREND_URL, payload=payload)
         #cuts the bad characters
+        self.write(response.url)
+        if response.status_code == 401:
+            
+            raise ValueError(" --------------- 401 bad response")
+        else:
+            print(response.status_code)
         needed_json = response.text[5:]
         #turns json to python dict
         needed_json = json.loads(needed_json)
@@ -152,15 +161,17 @@ class GoogleTrendsRequest(object):
         return self.values
 
 
-    def save_trend_csv(self, keyword:str = 'ukraine') -> None:
+    def save_trend_data(self, keyword:str = 'ukraine') -> None:
         self.get_trend_flow(keyword)
-        self.dataframe.to_csv(f'{keyword}.csv')
+        
+        self.dataframe.to_csv(keyword+'.csv')
 
 
     
 if __name__ == '__main__':
+    #for testing 
     trends_requester = GoogleTrendsRequest()
-    data = trends_requester.get_trend_data(keyword="memes")
-    print(data)
+    trends_requester.save_trend_data(keyword="ukraine")
+    
 
 
