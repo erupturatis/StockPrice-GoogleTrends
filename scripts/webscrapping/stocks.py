@@ -1,4 +1,5 @@
 import json
+
 import re
 import subprocess
 
@@ -37,6 +38,7 @@ class StockTrendsRequester(object):
             func(*args)
         return function_wrapper
 
+
     def get_search_result(self,keyword:str) -> str:
         '''
         Uses the company name to get the first search result on the website 
@@ -49,18 +51,26 @@ class StockTrendsRequester(object):
         response = subprocess.check_output(powershell, shell=True)
         response = response.decode("utf-8")
         return json.loads(response)["data"][0]["symbol"]
+
        
     def get_stock(self, symbol, days:int) -> list:
         '''
         makes use of another powershell file to fetch the data because 
         python requests library doesn t work for some reason
         '''
+        
         self.get_day(days=days)
         powershell = f"powershell scripts/webscrapping/request_stock.ps1 {symbol} {self.days_ago} {self.yesterday}"
         response = subprocess.check_output(powershell, shell=True)
         # decodes and turn response into pytohn dictionary
         response = response.decode("utf-8")
         response = json.loads(response)
+
+     
+        if response['status']['rCode'] == 400:
+            raise ValueError(str(response['status']['bCodeMessage'][0]['errorMessage']) )
+        
+        
         return response["data"]["chart"]
 
 
@@ -81,7 +91,7 @@ class StockTrendsRequester(object):
 
     def get_stock_data(self, keyword:str='TSLA', days:int=90 ) -> list:
         self.get_stock_flow(keyword,days)
-        return self.dataframe
+        return self.data
 
 
     def save_stock_data(self, keyword:str='TSLA', days:int=90 ) -> list:
@@ -104,10 +114,10 @@ class StockTrendsRequester(object):
             #brings the dates to the same format as result date
 
             
-            if not final_result[i]['times']==days_ago1:
+            if not final_result[i]['time']==days_ago1:
                 final_result.insert(i,{
-                    'values': result[i]['values'],
-                    'times': days_ago1
+                    'value': result[i]['value'],
+                    'time': days_ago1
                 })
 
         
@@ -124,20 +134,23 @@ class StockTrendsRequester(object):
 
         values = list()
         times = list()
+        data = list()
         
         simple_result = list()
 
         for element in result:
             simple_result.append({
-                'values': element["z"]["value"],
-                'times': element["z"]["dateTime"]
+                'value': element["z"]["value"],
+                'time': element["z"]["dateTime"]
             })
 
         simple_result = self.fill_blank_days(simple_result,days=days+1)
   
         for element in simple_result:
-            values.append(element["values"])
-            times.append(element["times"])
+            values.append(element["value"])
+            times.append(element["time"])
+            
+
         
         df = pd.DataFrame(
             {
@@ -146,11 +159,12 @@ class StockTrendsRequester(object):
             } 
         )
         self.dataframe=df
+        self.data = simple_result
 
 
 
 if __name__ == '__main__':
     #for testing 
     st = StockTrendsRequester()
-    st.save_stock_data('tesla',150)
+    st.save_stock_data('russian ruble',90)
    

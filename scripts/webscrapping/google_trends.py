@@ -1,8 +1,6 @@
-from ast import arg
-from asyncore import write
-from cgitb import text
+
 import json
-from sqlite3 import paramstyle
+from sre_constants import RANGE
 from time import time
 from urllib import request
 from webbrowser import get
@@ -14,6 +12,21 @@ class GoogleTrendsRequest(object):
     '''
     Webscrapper for Google Trends 
     '''
+    MONTHS = {
+        'Jan':'01',
+        'Feb':'02',
+        'Mar':'03',
+        'Apr':'04',
+        'May':'05',
+        'Jun':'06',
+        'Jul':'07',
+        'Aug':'08',
+        'Sep':'09',
+        'Oct':'10',
+        'Nov':'11',
+        'Dec':'12'
+    }
+
     STANDARD_URL = "https://trends.google.com/trends/api/explore"
     GEO_URL = "https://trends.google.com/trends/api/explore/pickers/geo"
     TREND_URL = "https://trends.google.com/trends/api/widgetdata/multiline"
@@ -118,6 +131,7 @@ class GoogleTrendsRequest(object):
 
         if not hasattr(self, 'headers'):
             self.get_cookie()
+
         self.get_tokens(keyword=keyword)
         response = self.get_trend(keyword=keyword)
         
@@ -125,22 +139,41 @@ class GoogleTrendsRequest(object):
         values = list()
         times = list()
         #gets only the wanted parameters
+
+        times_new_format = list()
+
         for element in response:
-            data.append({
-                'value':element['value'],
-                'time':element['formattedTime']
-            })
+            
             values.append(*element['value'])
             times.append(element['formattedTime'])
+
+        for element in times:
+            split_elements = element.split(' ')
+            split_elements[1] = split_elements[1][:-1]
+            if len(split_elements[1])==1:
+                split_elements[1] = '0' + split_elements[1]
+            new_element = self.MONTHS[split_elements[0]] + '/' + split_elements[1] + '/' + split_elements[2]
+            times_new_format.append(new_element)
+        
+        for i in range(len(response)):
+            packed = response[i]['value']
+            unpacked = packed[0]
+            data.append({
+                'value': unpacked,
+                'time':times_new_format[i]
+            })
+            
+        
+        
 
         df = pd.DataFrame(
             {
                 'values': values,
-                'times': times
+                'times': times_new_format
             }
         )
         self.dataframe = df
-        self.times = times
+        self.times = times_new_format
         self.values = values
         self.data = data
 
